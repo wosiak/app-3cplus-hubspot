@@ -26,7 +26,7 @@ export default function ClickToCallSystem() {
     try {
       const res = await fetch(`https://app.3c.plus/api/v1/groups-and-campaigns?all=true&paused=0&api_token=${agentToken}`)
       const json = await res.json()
-      if (json?.data) setCampaigns(json.data)
+      if (json?.data) setCampaigns(json.data.filter((c: any) => c.type === "campaign"))
     } catch (err) {
       setStatus({ message: "Erro ao buscar campanhas", type: "error" })
     }
@@ -91,10 +91,8 @@ export default function ClickToCallSystem() {
           body: JSON.stringify({ campaign: id, mode: "manual" }),
         }
       )
-
       if (!response.ok) throw new Error("Login failed")
       await response.text()
-      setStatus({ message: "Login realizado com sucesso!", type: "success" })
     } catch (err) {
       setStatus({ message: "Erro ao logar na campanha.", type: "error" })
     } finally {
@@ -120,7 +118,7 @@ export default function ClickToCallSystem() {
       )
       if (!response.ok) throw new Error("Erro ao discar")
       await response.json()
-      setStatus({ message: "Ligação iniciada com sucesso", type: "success" })
+      setStatus({ message: `Ligação iniciada com sucesso para ${phoneNumber}`, type: "success" })
     } catch (err) {
       setStatus({ message: "Erro ao iniciar ligação.", type: "error" })
     } finally {
@@ -137,7 +135,6 @@ export default function ClickToCallSystem() {
       const res = await fetch(`https://app.3c.plus/api/v1/agent/call/${activeCallId}/hangup?api_token=${agentToken}`, {
         method: "POST",
       })
-
       if (!res.ok) throw new Error("Erro ao encerrar")
       setStatus({ message: "Chamada encerrada com sucesso.", type: "success" })
       setAgentStatus("finished")
