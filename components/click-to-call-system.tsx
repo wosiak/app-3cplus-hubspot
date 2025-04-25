@@ -93,6 +93,7 @@ export default function ClickToCallSystem() {
 
       await response.text()
       setStatus({ message: "Login realizado com sucesso!", type: "success" })
+      setAgentStatus("logged_in")
     } catch (err) {
       setStatus({ message: "Erro ao logar na campanha.", type: "error" })
     } finally {
