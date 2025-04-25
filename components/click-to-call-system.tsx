@@ -1,27 +1,6 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-
-useCallSocket({
-  agentToken,
-  onEvent: (event, payload) => {
-    console.log("🔔 Evento do socket:", event, payload)
-
-    if (event === "call-was-connected") {
-      setStatus({ message: "Ligação conectada!", type: "success" })
-    }
-
-    if (event === "call-ended") {
-      setStatus({ message: "Ligação finalizada", type: "info" })
-    }
-
-    if (event === "disconnected") {
-      setStatus({ message: "Desconectado do servidor", type: "error" })
-    }
-  },
-})
-
-
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -48,6 +27,25 @@ export default function ClickToCallSystem() {
     type: null,
   })
   const [isLoading, setIsLoading] = useState(false)
+
+  useCallSocket({
+    agentToken,
+    onEvent: (event, payload) => {
+      console.log("🔔 Evento do socket:", event, payload)
+  
+      if (event === "call-was-connected") {
+        setStatus({ message: "Ligação conectada!", type: "success" })
+      }
+  
+      if (event === "call-ended") {
+        setStatus({ message: "Ligação finalizada", type: "info" })
+      }
+  
+      if (event === "disconnected") {
+        setStatus({ message: "Desconectado do servidor", type: "error" })
+      }
+    },
+  })
 
   const registerExtension = () => {
     if (!agentToken) {
