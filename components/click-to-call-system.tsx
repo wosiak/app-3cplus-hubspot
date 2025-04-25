@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, CheckCircle, Phone } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import CallingExtensions from '@hubspot/calling-extensions-sdk';
+import CallingExtensions from "@hubspot/calling-extensions-sdk"
 
 export default function ClickToCallSystem() {
   const [agentToken, setAgentToken] = useState("")
@@ -57,7 +57,7 @@ export default function ClickToCallSystem() {
 
       if (event === "call-ended") {
         setAgentStatus("finished")
-        setStatus({ message: `Ligação finalizada com ${phoneNumber}.", type: "info" })
+        setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
       }
 
