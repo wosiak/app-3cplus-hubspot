@@ -14,7 +14,7 @@ export default function ClickToCallSystem() {
   const [agentToken, setAgentToken] = useState("")
   const [campaignId, setCampaignId] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
-  const [agentStatus, setAgentStatus] = useState<"disconnected" | "connected" | "logged_in" | "calling" | "finished">("disconnected")
+  const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "calling" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({
     message: "",
@@ -46,7 +46,7 @@ export default function ClickToCallSystem() {
 
       if (event === "call-ended") {
         setAgentStatus("finished")
-        setStatus({ message: "Ligacão finalizada.", type: "info" })
+        setStatus({ message: "Ligação finalizada.", type: "info" })
         setActiveCallId(null)
       }
 
@@ -59,14 +59,15 @@ export default function ClickToCallSystem() {
 
   const registerExtension = () => {
     if (!agentToken) {
-      setStatus({ message: "Agent Token is required", type: "error" })
+      setStatus({ message: "Agent Token é obrigatório", type: "error" })
       return
     }
 
     const url = `https://app.3c.plus/extension?api_token=${encodeURIComponent(agentToken)}`
     window.open(url, "_blank", "width=800,height=600")
 
-    setStatus({ message: "Janela de extensão aberta. Complete e volte aqui.", type: "info" })
+    setAgentStatus("extension_opened")
+    setStatus({ message: "Extensão aberta. Agora clique em 'Fazer login'.", type: "info" })
   }
 
   const login = async () => {
@@ -121,7 +122,7 @@ export default function ClickToCallSystem() {
       if (!response.ok) throw new Error("Erro ao discar")
 
       const data = await response.json()
-      setStatus({ message: "Ligacão iniciada com sucesso", type: "success" })
+      setStatus({ message: "Ligação iniciada com sucesso", type: "success" })
     } catch (err) {
       setStatus({ message: "Erro ao iniciar ligação.", type: "error" })
     } finally {
@@ -159,10 +160,11 @@ export default function ClickToCallSystem() {
         <CardTitle>3C Plus Click-to-Call</CardTitle>
         <CardDescription>
           {agentStatus === "disconnected" && "Conecte sua extensão para começar"}
+          {agentStatus === "extension_opened" && "Clique em 'Fazer login' para continuar"}
           {agentStatus === "connected" && "Login para acessar campanha manual"}
           {agentStatus === "logged_in" && "Pronto para discar"}
           {agentStatus === "calling" && "Ligando..."}
-          {agentStatus === "finished" && "Ligacão encerrada."}
+          {agentStatus === "finished" && "Ligação encerrada."}
         </CardDescription>
       </CardHeader>
 
@@ -175,7 +177,7 @@ export default function ClickToCallSystem() {
           </Alert>
         )}
 
-        {(agentStatus === "disconnected" || agentStatus === "connected") && (
+        {(agentStatus === "disconnected" || agentStatus === "extension_opened" || agentStatus === "connected") && (
           <>
             <Label>Agent Token</Label>
             <Input value={agentToken} onChange={(e) => setAgentToken(e.target.value)} />
@@ -198,9 +200,9 @@ export default function ClickToCallSystem() {
           <Button onClick={registerExtension} disabled={!agentToken}>Registrar Extensão</Button>
         )}
 
-        {agentStatus === "connected" && (
+        {agentStatus === "extension_opened" && (
           <Button onClick={login} disabled={isLoading || !agentToken || !campaignId}>
-            {isLoading ? "Conectando..." : "Fazer Login"}
+            {isLoading ? "Logando..." : "Fazer Login"}
           </Button>
         )}
 
