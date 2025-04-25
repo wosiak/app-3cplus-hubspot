@@ -14,11 +14,12 @@ export default function ClickToCallSystem() {
   const [agentToken, setAgentToken] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([])
+  const [selectedCampaign, setSelectedCampaign] = useState<string>("")
   const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "calling" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({
     message: "",
-    type: null,
+    type: null
   })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -45,7 +46,7 @@ export default function ClickToCallSystem() {
 
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
-        setStatus({ message: "Login na campanha feito! Pronto para discar.", type: "success" })
+        setStatus({ message: `Modo Manual: Campanha ${selectedCampaign}`, type: "success" })
       }
 
       if (event === "call-was-connected") {
@@ -65,7 +66,7 @@ export default function ClickToCallSystem() {
         setAgentStatus("disconnected")
         setStatus({ message: "Desconectado do servidor.", type: "error" })
       }
-    },
+    }
   })
 
   const registerExtension = () => {
@@ -79,16 +80,17 @@ export default function ClickToCallSystem() {
     setStatus({ message: "Extensão aberta. Agora clique em 'Fazer login'.", type: "info" })
   }
 
-  const login = async (id: number) => {
+  const login = async (id: number, name: string) => {
     setIsLoading(true)
     setStatus({ message: "Efetuando login...", type: "info" })
+    setSelectedCampaign(name)
 
     try {
       const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ campaign: id, mode: "manual" }),
+          body: JSON.stringify({ campaign: id, mode: "manual" })
         }
       )
       if (!response.ok) throw new Error("Login failed")
@@ -113,7 +115,7 @@ export default function ClickToCallSystem() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneNumber }),
+          body: JSON.stringify({ phone: phoneNumber })
         }
       )
       if (!response.ok) throw new Error("Erro ao discar")
@@ -133,7 +135,7 @@ export default function ClickToCallSystem() {
 
     try {
       const res = await fetch(`https://app.3c.plus/api/v1/agent/call/${activeCallId}/hangup?api_token=${agentToken}`, {
-        method: "POST",
+        method: "POST"
       })
       if (!res.ok) throw new Error("Erro ao encerrar")
       setStatus({ message: "Chamada encerrada com sucesso.", type: "success" })
@@ -155,7 +157,7 @@ export default function ClickToCallSystem() {
           {agentStatus === "disconnected" && "Conecte sua extensão para começar"}
           {agentStatus === "extension_opened" && "Clique em 'Fazer login' para continuar"}
           {agentStatus === "connected" && "Login para acessar campanha manual"}
-          {agentStatus === "logged_in" && "Pronto para discar"}
+          {agentStatus === "logged_in" && `Modo Manual: Campanha ${selectedCampaign}`}
           {agentStatus === "calling" && "Ligando..."}
           {agentStatus === "finished" && "Ligação encerrada."}
         </CardDescription>
@@ -182,7 +184,7 @@ export default function ClickToCallSystem() {
             <Label>Escolha a campanha</Label>
             <div className="flex flex-col gap-2">
               {campaigns.map((c) => (
-                <Button key={c.id} variant="outline" onClick={() => login(c.id)} disabled={isLoading}>
+                <Button key={c.id} variant="outline" onClick={() => login(c.id, c.name)} disabled={isLoading}>
                   {c.name}
                 </Button>
               ))}
