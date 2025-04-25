@@ -1,3 +1,5 @@
+"use client"
+
 import { useCallSocket } from "@/hooks/useCallSocket"
 
 useCallSocket({
