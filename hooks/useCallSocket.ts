@@ -1,9 +1,5 @@
-"use client"
-
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { io, Socket } from "socket.io-client"
-
-let socket: Socket | null = null
 
 interface Props {
   agentToken: string
@@ -11,39 +7,44 @@ interface Props {
 }
 
 export function useCallSocket({ agentToken, onEvent }: Props) {
-  useEffect(() => {
-    if (!agentToken) return
+  const socketRef = useRef<Socket | null>(null)
 
-    socket = io("https://app.3c.plus", {
+  useEffect(() => {
+    if (!agentToken || socketRef.current) return
+
+    console.log("🎯 Iniciando conexão socket para:", agentToken)
+
+    socketRef.current = io("https://app.3c.plus", {
       path: "/socket.io",
       auth: {
-        token: agentToken, // autenticação via token do operador
+        token: agentToken,
       },
       transports: ["websocket"],
     })
 
-    socket.on("connect", () => {
+    socketRef.current.on("connect", () => {
       onEvent("connected")
     })
 
-    socket.on("call-was-connected", (data) => {
+    socketRef.current.on("call-was-connected", (data) => {
       onEvent("call-was-connected", data)
     })
 
-    socket.on("call-ended", (data) => {
+    socketRef.current.on("call-ended", (data) => {
       onEvent("call-ended", data)
     })
 
-    socket.on("disconnect", () => {
+    socketRef.current.on("disconnect", () => {
       onEvent("disconnected")
     })
 
-    socket.onAny((event, ...args) => {
-      console.log("🧪 Qualquer evento recebido:", event, args)
-    })    
+    socketRef.current.onAny((event, ...args) => {
+      console.log("🧪 Evento socket:", event, args)
+    })
 
     return () => {
-      socket?.disconnect()
+      socketRef.current?.disconnect()
+      socketRef.current = null
     }
   }, [agentToken])
 }
