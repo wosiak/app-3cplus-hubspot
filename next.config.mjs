@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'standalone', // ← ESSA LINHA AQUI
   async headers() {
     return [
       {
@@ -29,3 +30,4 @@ const nextConfig = {
 }
 
 export default nextConfig
+
