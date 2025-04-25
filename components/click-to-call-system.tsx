@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -12,8 +12,8 @@ import CallingExtensions from '@hubspot/calling-extensions-sdk';
 
 export default function ClickToCallSystem() {
   const [agentToken, setAgentToken] = useState("")
-  const [campaignId, setCampaignId] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
+  const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([])
   const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "calling" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({
@@ -21,6 +21,16 @@ export default function ClickToCallSystem() {
     type: null,
   })
   const [isLoading, setIsLoading] = useState(false)
+
+  const fetchCampaigns = async () => {
+    try {
+      const res = await fetch(`https://app.3c.plus/api/v1/groups-and-campaigns?all=true&paused=0&api_token=${agentToken}`)
+      const json = await res.json()
+      if (json?.data) setCampaigns(json.data)
+    } catch (err) {
+      setStatus({ message: "Erro ao buscar campanhas", type: "error" })
+    }
+  }
 
   useCallSocket({
     agentToken,
@@ -30,6 +40,7 @@ export default function ClickToCallSystem() {
       if (event === "agent-is-connected") {
         setAgentStatus("connected")
         setStatus({ message: "Extensão conectada! Pronto para login.", type: "success" })
+        fetchCampaigns()
       }
 
       if (event === "agent-entered-manual") {
@@ -62,38 +73,28 @@ export default function ClickToCallSystem() {
       setStatus({ message: "Agent Token é obrigatório", type: "error" })
       return
     }
-
     const url = `https://app.3c.plus/extension?api_token=${encodeURIComponent(agentToken)}`
     window.open(url, "_blank", "width=800,height=600")
-
     setAgentStatus("extension_opened")
     setStatus({ message: "Extensão aberta. Agora clique em 'Fazer login'.", type: "info" })
   }
 
-  const login = async () => {
-    if (!agentToken || !campaignId) {
-      setStatus({ message: "Agent Token e Campaign ID obrigatórios", type: "error" })
-      return
-    }
-
+  const login = async (id: number) => {
     setIsLoading(true)
     setStatus({ message: "Efetuando login...", type: "info" })
 
     try {
-      const response = await fetch(
-        `https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ campaign: campaignId, mode: "manual" }),
+          body: JSON.stringify({ campaign: id, mode: "manual" }),
         }
       )
 
       if (!response.ok) throw new Error("Login failed")
-
       await response.text()
       setStatus({ message: "Login realizado com sucesso!", type: "success" })
-      setAgentStatus("logged_in")
     } catch (err) {
       setStatus({ message: "Erro ao logar na campanha.", type: "error" })
     } finally {
@@ -106,23 +107,19 @@ export default function ClickToCallSystem() {
       setStatus({ message: "Telefone é obrigatório", type: "error" })
       return
     }
-
     setIsLoading(true)
     setStatus({ message: "Iniciando chamada...", type: "info" })
 
     try {
-      const response = await fetch(
-        `https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`,
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: phoneNumber }),
         }
       )
-
       if (!response.ok) throw new Error("Erro ao discar")
-
-      const data = await response.json()
+      await response.json()
       setStatus({ message: "Ligação iniciada com sucesso", type: "success" })
     } catch (err) {
       setStatus({ message: "Erro ao iniciar ligação.", type: "error" })
@@ -133,7 +130,6 @@ export default function ClickToCallSystem() {
 
   const hangupCall = async () => {
     if (!activeCallId) return
-
     setIsLoading(true)
     setStatus({ message: "Desligando chamada...", type: "info" })
 
@@ -143,7 +139,6 @@ export default function ClickToCallSystem() {
       })
 
       if (!res.ok) throw new Error("Erro ao encerrar")
-
       setStatus({ message: "Chamada encerrada com sucesso.", type: "success" })
       setAgentStatus("finished")
       setActiveCallId(null)
@@ -178,13 +173,23 @@ export default function ClickToCallSystem() {
           </Alert>
         )}
 
-        {(agentStatus === "disconnected" || agentStatus === "extension_opened" || agentStatus === "connected") && (
+        {(agentStatus === "disconnected" || agentStatus === "extension_opened") && (
           <>
             <Label>Agent Token</Label>
             <Input value={agentToken} onChange={(e) => setAgentToken(e.target.value)} />
+          </>
+        )}
 
-            <Label>Campaign ID</Label>
-            <Input value={campaignId} onChange={(e) => setCampaignId(e.target.value)} />
+        {agentStatus === "connected" && campaigns.length > 0 && (
+          <>
+            <Label>Escolha a campanha</Label>
+            <div className="flex flex-col gap-2">
+              {campaigns.map((c) => (
+                <Button key={c.id} variant="outline" onClick={() => login(c.id)} disabled={isLoading}>
+                  {c.name}
+                </Button>
+              ))}
+            </div>
           </>
         )}
 
@@ -199,12 +204,6 @@ export default function ClickToCallSystem() {
       <CardFooter className="flex flex-col gap-2">
         {agentStatus === "disconnected" && (
           <Button onClick={registerExtension} disabled={!agentToken}>Registrar Extensão</Button>
-        )}
-
-        {agentStatus === "extension_opened" && (
-          <Button onClick={login} disabled={isLoading || !agentToken || !campaignId}>
-            {isLoading ? "Logando..." : "Fazer Login"}
-          </Button>
         )}
 
         {agentStatus === "logged_in" && (
