@@ -37,7 +37,7 @@ export default function ClickToCallSystem() {
     onEvent: (event, payload) => {
       console.log("🔔 Evento do socket:", event, payload)
 
-      if (event === "agent-is-connected") {
+      if (event === "connected") {
         setAgentStatus("connected")
         setStatus({ message: "Extensão conectada! Pronto para login.", type: "success" })
         fetchCampaigns()
@@ -57,7 +57,7 @@ export default function ClickToCallSystem() {
 
       if (event === "call-ended") {
         setAgentStatus("finished")
-        setStatus({ message: "Ligação finalizada.", type: "info" })
+        setStatus({ message: `Ligação finalizada com ${phoneNumber}.", type: "info" })
         setActiveCallId(null)
       }
 
