@@ -61,7 +61,7 @@ export default function ClickToCallSystem() {
         const callId = payload?.call?.id
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
-        setStatus({ message: "Ligação conectada!", type: "success" })
+        setStatus({ message: `Ligação conectada com o número: ${phoneNumber}!`, type: "success" })
 
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
