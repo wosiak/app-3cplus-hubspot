@@ -60,17 +60,22 @@ export default function ClickToCallSystem() {
       if (event === "call-was-connected") {
         const callId = payload?.call?.id
         const phone = payload?.call?.phone
-
+      
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
-        
-        setStatus({ message: `Ligação conectada com o número: ${phoneNumber}!`, type: "success" })
-
+      
+        if (phone) {
+          setPhoneNumber(phone)
+          setStatus({ message: `Ligação conectada com o número: ${phone}!`, type: "success" })
+        } else {
+          setStatus({ message: "Ligação conectada!", type: "success" })
+        }
+      
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
           setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
         }
-      }
+      }      
 
       if (event === "call-ended") {
         setAgentStatus("finished")
@@ -203,9 +208,13 @@ export default function ClickToCallSystem() {
             <Label>Escolha a campanha</Label>
             <div className="flex flex-col gap-2">
               {campaigns.map((c) => (
-                <Button key={c.id} variant="outline" onClick={() => login(c.id, c.name)} disabled={isLoading}>
-                  {c.name}
-                </Button>
+                <Button
+                key={q.id}
+                variant="outline"
+                className="text-black bg-white hover:bg-gray-200"
+              >
+                {q.name}
+              </Button>              
               ))}
             </div>
           </>
