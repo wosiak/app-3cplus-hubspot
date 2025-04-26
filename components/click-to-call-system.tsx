@@ -45,12 +45,9 @@ export default function ClickToCallSystem() {
       }
 
       if (event === "agent-entered-manual") {
-        setAgentStatus("logged_in")
-      
-        // Tentamos obter a campanha logada a partir da lista de campanhas (opcional mas seguro)
         const campaignId = payload?.campaign_id
         const campaign = campaigns.find((c) => c.id === campaignId)
-      
+
         if (campaign) {
           setSelectedCampaign(campaign)
           setStatus({ message: `Modo Manual: Campanha ${campaign.name}`, type: "success" })
@@ -59,10 +56,10 @@ export default function ClickToCallSystem() {
         } else {
           setStatus({ message: "Login realizado! Pronto para discar.", type: "success" })
         }
-      
-        // Oculta campanhas do front ao logar
+
+        setAgentStatus("logged_in")
         setCampaigns([])
-      }      
+      }
 
       if (event === "call-was-connected") {
         const callId = payload?.call?.id
@@ -73,7 +70,7 @@ export default function ClickToCallSystem() {
 
       if (event === "call-ended") {
         setAgentStatus("finished")
-        setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
+        setStatus({ message: `Ligação finalizada com ${phoneNumber}.", type: "info" })
         setActiveCallId(null)
       }
 
@@ -235,4 +232,4 @@ export default function ClickToCallSystem() {
       </CardFooter>
     </Card>
   )
-}
+} 
