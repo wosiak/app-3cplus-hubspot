@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,7 @@ export default function ClickToCallSystem() {
   const [phoneNumber, setPhoneNumber] = useState("")
   const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([])
   const [selectedCampaign, setSelectedCampaign] = useState<{ id: number; name: string } | null>(null)
-  const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "calling" | "finished">("disconnected")
+  const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "dialing" | "in_call" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({
     message: "",
@@ -64,8 +64,8 @@ export default function ClickToCallSystem() {
       if (event === "call-was-connected") {
         const callId = payload?.call?.id
         setActiveCallId(callId || null)
-        setAgentStatus("calling")
-        setStatus({ message: `Ligando para ${payload?.call?.phone}`, type: "success" })
+        setAgentStatus("in_call")
+        setStatus({ message: "Ligação conectada!", type: "success" })
       }
 
       if (event === "call-ended") {
@@ -135,6 +135,7 @@ export default function ClickToCallSystem() {
       if (!response.ok) throw new Error("Erro ao discar")
       await response.json()
       setStatus({ message: `Ligação iniciada com sucesso para ${phoneNumber}`, type: "success" })
+      setAgentStatus("dialing")
     } catch (err) {
       setStatus({ message: "Erro ao iniciar ligação.", type: "error" })
     } finally {
@@ -172,7 +173,8 @@ export default function ClickToCallSystem() {
           {agentStatus === "extension_opened" && "Clique em 'Fazer login' para continuar"}
           {agentStatus === "connected" && "Login para acessar campanha manual"}
           {agentStatus === "logged_in" && selectedCampaign && `Modo Manual: Campanha ${selectedCampaign.name}`}
-          {agentStatus === "calling" && "Ligando..."}
+          {agentStatus === "dialing" && "Ligando..."}
+          {agentStatus === "in_call" && "Ligação conectada!"}
           {agentStatus === "finished" && "Ligação encerrada."}
         </CardDescription>
       </CardHeader>
@@ -226,7 +228,7 @@ export default function ClickToCallSystem() {
           </Button>
         )}
 
-        {agentStatus === "calling" && activeCallId && (
+        {agentStatus === "in_call" && activeCallId && (
           <Button variant="destructive" onClick={hangupCall}>
             Encerrar Ligação
           </Button>
