@@ -203,22 +203,24 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "connected" && campaigns.length > 0 && (
-          <>
-            <Label>Escolha a campanha</Label>
-            <div className="flex flex-col gap-2">
-              {campaigns.map((c) => (
-                <Button
-                key={c.id}
-                variant="outline"
-                className="text-black bg-white hover:bg-gray-200"
-              >
-                {c.name}
-              </Button>              
-              ))}
-            </div>
-          </>
-        )}
+{agentStatus === "connected" && campaigns.length > 0 && (
+  <>
+    <Label>Escolha a campanha</Label>
+    <div className="flex flex-col gap-2">
+      {campaigns.map((c) => (
+        <Button
+          key={c.id}
+          variant="outline"
+          className="text-black bg-white hover:bg-gray-200"
+          onClick={() => login(c.id, c.name)} // ← O MAIS IMPORTANTE AQUI!!!
+        >
+          {c.name}
+        </Button>
+      ))}
+    </div>
+  </>
+)}
+
 
         {agentStatus === "logged_in" && (
           <>
