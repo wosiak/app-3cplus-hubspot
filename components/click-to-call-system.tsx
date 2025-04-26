@@ -14,12 +14,12 @@ export default function ClickToCallSystem() {
   const [agentToken, setAgentToken] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
   const [campaigns, setCampaigns] = useState<{ id: number; name: string }[]>([])
-  const [selectedCampaign, setSelectedCampaign] = useState<string>("")
+  const [selectedCampaign, setSelectedCampaign] = useState<{ id: number; name: string } | null>(null)
   const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "calling" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({
     message: "",
-    type: null
+    type: null,
   })
   const [isLoading, setIsLoading] = useState(false)
 
@@ -46,7 +46,11 @@ export default function ClickToCallSystem() {
 
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
-        setStatus({ message: `Modo Manual: Campanha ${selectedCampaign}`, type: "success" })
+        if (selectedCampaign) {
+          setStatus({ message: `Modo Manual: Campanha ${selectedCampaign.name}`, type: "success" })
+        } else {
+          setStatus({ message: "Login realizado!", type: "success" })
+        }
       }
 
       if (event === "call-was-connected") {
@@ -66,7 +70,7 @@ export default function ClickToCallSystem() {
         setAgentStatus("disconnected")
         setStatus({ message: "Desconectado do servidor.", type: "error" })
       }
-    }
+    },
   })
 
   const registerExtension = () => {
@@ -82,15 +86,15 @@ export default function ClickToCallSystem() {
 
   const login = async (id: number, name: string) => {
     setIsLoading(true)
+    setSelectedCampaign({ id, name })
     setStatus({ message: "Efetuando login...", type: "info" })
-    setSelectedCampaign(name)
 
     try {
       const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ campaign: id, mode: "manual" })
+          body: JSON.stringify({ campaign: id, mode: "manual" }),
         }
       )
       if (!response.ok) throw new Error("Login failed")
@@ -115,7 +119,7 @@ export default function ClickToCallSystem() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneNumber })
+          body: JSON.stringify({ phone: phoneNumber }),
         }
       )
       if (!response.ok) throw new Error("Erro ao discar")
@@ -135,7 +139,7 @@ export default function ClickToCallSystem() {
 
     try {
       const res = await fetch(`https://app.3c.plus/api/v1/agent/call/${activeCallId}/hangup?api_token=${agentToken}`, {
-        method: "POST"
+        method: "POST",
       })
       if (!res.ok) throw new Error("Erro ao encerrar")
       setStatus({ message: "Chamada encerrada com sucesso.", type: "success" })
@@ -157,7 +161,7 @@ export default function ClickToCallSystem() {
           {agentStatus === "disconnected" && "Conecte sua extensão para começar"}
           {agentStatus === "extension_opened" && "Clique em 'Fazer login' para continuar"}
           {agentStatus === "connected" && "Login para acessar campanha manual"}
-          {agentStatus === "logged_in" && `Modo Manual: Campanha ${selectedCampaign}`}
+          {agentStatus === "logged_in" && selectedCampaign && `Modo Manual: Campanha ${selectedCampaign.name}`}
           {agentStatus === "calling" && "Ligando..."}
           {agentStatus === "finished" && "Ligação encerrada."}
         </CardDescription>
