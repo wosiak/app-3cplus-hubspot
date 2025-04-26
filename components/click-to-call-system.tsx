@@ -209,11 +209,11 @@ export default function ClickToCallSystem() {
             <div className="flex flex-col gap-2">
               {campaigns.map((c) => (
                 <Button
-                key={q.id}
+                key={c.id}
                 variant="outline"
                 className="text-black bg-white hover:bg-gray-200"
               >
-                {q.name}
+                {c.name}
               </Button>              
               ))}
             </div>
