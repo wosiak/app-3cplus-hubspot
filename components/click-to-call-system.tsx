@@ -47,7 +47,6 @@ export default function ClickToCallSystem() {
       if (event === "agent-entered-manual") {
         const campaignId = payload?.campaign_id
         const campaign = campaigns.find((c) => c.id === campaignId)
-
         if (campaign) {
           setSelectedCampaign(campaign)
           setStatus({ message: `Modo Manual: Campanha ${campaign.name}`, type: "success" })
@@ -56,9 +55,8 @@ export default function ClickToCallSystem() {
         } else {
           setStatus({ message: "Login realizado! Pronto para discar.", type: "success" })
         }
-
-        setAgentStatus("logged_in")
         setCampaigns([])
+        setAgentStatus("logged_in")
       }
 
       if (event === "call-was-connected") {
@@ -232,4 +230,4 @@ export default function ClickToCallSystem() {
       </CardFooter>
     </Card>
   )
-} 
+}
