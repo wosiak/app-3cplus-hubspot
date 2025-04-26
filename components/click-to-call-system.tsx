@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -94,17 +94,21 @@ export default function ClickToCallSystem() {
 
   const login = async (id: number, name: string) => {
     setIsLoading(true)
-    setSelectedCampaign({ id, name })
     setStatus({ message: "Efetuando login...", type: "info" })
 
     try {
-      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ campaign: id, mode: "manual" }),
-      })
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ campaign: id, mode: "manual" }),
+        }
+      )
       if (!response.ok) throw new Error("Login failed")
       await response.text()
+      setSelectedCampaign({ id, name })
+      setStatus({ message: "Login realizado com sucesso!", type: "success" })
+      setAgentStatus("logged_in")
     } catch (err) {
       setStatus({ message: "Erro ao logar na campanha.", type: "error" })
     } finally {
@@ -121,11 +125,13 @@ export default function ClickToCallSystem() {
     setStatus({ message: "Iniciando chamada...", type: "info" })
 
     try {
-      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: phoneNumber }),
-      })
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: phoneNumber }),
+        }
+      )
       if (!response.ok) throw new Error("Erro ao discar")
       await response.json()
       setStatus({ message: `Ligação iniciada com sucesso para ${phoneNumber}`, type: "success" })
