@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, CheckCircle, Phone } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import CallingExtensions from "@hubspot/calling-extensions-sdk"
 
 export default function ClickToCallSystem() {
   const [agentToken, setAgentToken] = useState("")
@@ -18,10 +17,8 @@ export default function ClickToCallSystem() {
   const [selectedCampaign, setSelectedCampaign] = useState<{ id: number; name: string } | null>(null)
   const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "dialing" | "in_call" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
-  const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({
-    message: "",
-    type: null,
-  })
+  const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
+  const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
 
   const fetchCampaigns = async () => {
@@ -53,8 +50,6 @@ export default function ClickToCallSystem() {
         if (campaign) {
           setSelectedCampaign(campaign)
           setStatus({ message: `Modo Manual: Campanha ${campaign.name}`, type: "success" })
-        } else if (selectedCampaign) {
-          setStatus({ message: `Modo Manual: Campanha ${selectedCampaign.name}`, type: "success" })
         } else {
           setStatus({ message: "Login realizado! Pronto para discar.", type: "success" })
         }
@@ -67,12 +62,18 @@ export default function ClickToCallSystem() {
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
         setStatus({ message: "Ligação conectada!", type: "success" })
+
+        const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
+        if (qualificationsList && Array.isArray(qualificationsList)) {
+          setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
+        }
       }
 
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
+        setQualifications([])
       }
 
       if (event === "disconnected") {
@@ -87,37 +88,26 @@ export default function ClickToCallSystem() {
       alert("Por favor, preencha o Agent Token primeiro!")
       return
     }
-  
     const url = `https://app.3c.plus/extension?api_token=${encodeURIComponent(agentToken)}`
-    
-    // ABRE DIRETO
     const popup = window.open(url, "_blank", "width=800,height=600")
-    
     if (!popup) {
       alert("Pop-up bloqueado! Libere o pop-up para o site.")
       return
     }
-    
     popup.focus()
-  
-    // Só depois atualiza o estado (sem afetar o window.open)
     setAgentStatus("extension_opened")
     setStatus({ message: "Extensão aberta. Agora clique em 'Fazer login'.", type: "info" })
   }
-  
 
   const login = async (id: number, name: string) => {
     setIsLoading(true)
     setStatus({ message: "Efetuando login...", type: "info" })
-
     try {
-      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ campaign: id, mode: "manual" }),
-        }
-      )
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign: id, mode: "manual" })
+      })
       if (!response.ok) throw new Error("Login failed")
       await response.text()
       setSelectedCampaign({ id, name })
@@ -137,15 +127,12 @@ export default function ClickToCallSystem() {
     }
     setIsLoading(true)
     setStatus({ message: "Iniciando chamada...", type: "info" })
-
     try {
-      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneNumber }),
-        }
-      )
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneNumber })
+      })
       if (!response.ok) throw new Error("Erro ao discar")
       await response.json()
       setStatus({ message: `Ligação iniciada com sucesso para ${phoneNumber}`, type: "success" })
@@ -161,7 +148,6 @@ export default function ClickToCallSystem() {
     if (!activeCallId) return
     setIsLoading(true)
     setStatus({ message: "Desligando chamada...", type: "info" })
-
     try {
       const res = await fetch(`https://app.3c.plus/api/v1/agent/call/${activeCallId}/hangup?api_token=${agentToken}`, {
         method: "POST",
@@ -179,12 +165,7 @@ export default function ClickToCallSystem() {
   }
 
   return (
-    <Card
-      className={clsx(
-        "transition-all",
-        agentStatus === "in_call" && "bg-[#008A35] text-white"
-      )}
-    >
+    <Card className={clsx("transition-all", agentStatus === "in_call" && "bg-[#008A35] text-white")}> 
       <CardHeader>
         <CardTitle>3C Plus Click-to-Call</CardTitle>
         <CardDescription>
@@ -233,13 +214,24 @@ export default function ClickToCallSystem() {
             <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
           </>
         )}
+
+        {agentStatus === "in_call" && qualifications.length > 0 && (
+          <>
+            <Label>Qualifique a ligação:</Label>
+            <div className="flex flex-wrap gap-2">
+              {qualifications.map((q) => (
+                <Button key={q.id} variant="outline">
+                  {q.name}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
       </CardContent>
 
       <CardFooter className="flex flex-col gap-2">
         {agentStatus === "disconnected" && (
-          <Button onClick={registerExtension} disabled={!agentToken}>
-            Registrar Extensão
-          </Button>
+          <Button onClick={registerExtension} disabled={!agentToken}>Registrar Extensão</Button>
         )}
 
         {agentStatus === "logged_in" && (
