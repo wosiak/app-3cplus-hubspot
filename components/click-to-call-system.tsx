@@ -84,14 +84,27 @@ export default function ClickToCallSystem() {
 
   const registerExtension = () => {
     if (!agentToken) {
-      setStatus({ message: "Agent Token é obrigatório", type: "error" })
+      alert("Por favor, preencha o Agent Token primeiro!")
       return
     }
+  
     const url = `https://app.3c.plus/extension?api_token=${encodeURIComponent(agentToken)}`
-    window.open(url, "_blank", "width=800,height=600")
+    
+    // ABRE DIRETO
+    const popup = window.open(url, "_blank", "width=800,height=600")
+    
+    if (!popup) {
+      alert("Pop-up bloqueado! Libere o pop-up para o site.")
+      return
+    }
+    
+    popup.focus()
+  
+    // Só depois atualiza o estado (sem afetar o window.open)
     setAgentStatus("extension_opened")
     setStatus({ message: "Extensão aberta. Agora clique em 'Fazer login'.", type: "info" })
   }
+  
 
   const login = async (id: number, name: string) => {
     setIsLoading(true)
