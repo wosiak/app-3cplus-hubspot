@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -45,8 +45,10 @@ export default function ClickToCallSystem() {
       }
 
       if (event === "agent-entered-manual") {
+        setAgentStatus("logged_in")
         const campaignId = payload?.campaign_id
         const campaign = campaigns.find((c) => c.id === campaignId)
+
         if (campaign) {
           setSelectedCampaign(campaign)
           setStatus({ message: `Modo Manual: Campanha ${campaign.name}`, type: "success" })
@@ -55,8 +57,8 @@ export default function ClickToCallSystem() {
         } else {
           setStatus({ message: "Login realizado! Pronto para discar.", type: "success" })
         }
+
         setCampaigns([])
-        setAgentStatus("logged_in")
       }
 
       if (event === "call-was-connected") {
@@ -68,7 +70,7 @@ export default function ClickToCallSystem() {
 
       if (event === "call-ended") {
         setAgentStatus("finished")
-        setStatus({ message: `Ligação finalizada com ${phoneNumber}.", type: "info" })
+        setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
       }
 
@@ -96,13 +98,11 @@ export default function ClickToCallSystem() {
     setStatus({ message: "Efetuando login...", type: "info" })
 
     try {
-      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ campaign: id, mode: "manual" }),
-        }
-      )
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/login?api_token=${encodeURIComponent(agentToken)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign: id, mode: "manual" }),
+      })
       if (!response.ok) throw new Error("Login failed")
       await response.text()
     } catch (err) {
@@ -121,13 +121,11 @@ export default function ClickToCallSystem() {
     setStatus({ message: "Iniciando chamada...", type: "info" })
 
     try {
-      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: phoneNumber }),
-        }
-      )
+      const response = await fetch(`https://app.3c.plus/api/v1/agent/manual_call/dial?api_token=${encodeURIComponent(agentToken)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneNumber }),
+      })
       if (!response.ok) throw new Error("Erro ao discar")
       await response.json()
       setStatus({ message: `Ligação iniciada com sucesso para ${phoneNumber}`, type: "success" })
