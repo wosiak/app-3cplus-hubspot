@@ -2,6 +2,7 @@
 
 import { useCallSocket } from "@/hooks/useCallSocket"
 import { useState } from "react"
+import clsx from "clsx"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -165,7 +166,12 @@ export default function ClickToCallSystem() {
   }
 
   return (
-    <Card>
+    <Card
+      className={clsx(
+        "transition-all",
+        agentStatus === "in_call" && "bg-[#008A35] text-white"
+      )}
+    >
       <CardHeader>
         <CardTitle>3C Plus Click-to-Call</CardTitle>
         <CardDescription>
@@ -218,7 +224,9 @@ export default function ClickToCallSystem() {
 
       <CardFooter className="flex flex-col gap-2">
         {agentStatus === "disconnected" && (
-          <Button onClick={registerExtension} disabled={!agentToken}>Registrar Extensão</Button>
+          <Button onClick={registerExtension} disabled={!agentToken}>
+            Registrar Extensão
+          </Button>
         )}
 
         {agentStatus === "logged_in" && (
@@ -229,7 +237,7 @@ export default function ClickToCallSystem() {
         )}
 
         {agentStatus === "in_call" && activeCallId && (
-          <Button variant="destructive" onClick={hangupCall}>
+          <Button className="bg-red-600 hover:bg-red-700" onClick={hangupCall}>
             Encerrar Ligação
           </Button>
         )}
