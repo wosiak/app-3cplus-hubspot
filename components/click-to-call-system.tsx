@@ -31,6 +31,31 @@ export default function ClickToCallSystem() {
     }
   }
 
+  const qualifyCall = async (qualificationId: number) => {
+    if (!activeCallId || !agentToken) {
+      setStatus({ message: "Não há ligação ativa para qualificar.", type: "error" })
+      return
+    }
+
+    try {
+      const response = await fetch(
+        `https://app.3c.plus/api/v1/agent/manual_call/${activeCallId}/qualify?api_token=${encodeURIComponent(agentToken)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: new URLSearchParams({ qualification_id: String(qualificationId) }),
+        }
+      )
+
+      if (!response.ok) throw new Error("Erro ao qualificar chamada.")
+      setStatus({ message: "Ligação qualificada com sucesso!", type: "success" })
+    } catch (err) {
+      setStatus({ message: "Erro ao qualificar chamada.", type: "error" })
+    }
+  }
+
   useCallSocket({
     agentToken,
     onEvent: (event, payload) => {
@@ -60,22 +85,22 @@ export default function ClickToCallSystem() {
       if (event === "call-was-connected") {
         const callId = payload?.call?.id
         const phone = payload?.call?.phone
-      
+
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
-      
+
         if (phone) {
           setPhoneNumber(phone)
           setStatus({ message: `Ligação conectada com o número: ${phone}!`, type: "success" })
         } else {
           setStatus({ message: "Ligação conectada!", type: "success" })
         }
-      
+
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
           setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
         }
-      }      
+      }
 
       if (event === "call-ended") {
         setAgentStatus("finished")
@@ -203,24 +228,23 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-{agentStatus === "connected" && campaigns.length > 0 && (
-  <>
-    <Label>Escolha a campanha</Label>
-    <div className="flex flex-col gap-2">
-      {campaigns.map((c) => (
-        <Button
-          key={c.id}
-          variant="outline"
-          className="text-black bg-white hover:bg-gray-200"
-          onClick={() => login(c.id, c.name)} // ← O MAIS IMPORTANTE AQUI!!!
-        >
-          {c.name}
-        </Button>
-      ))}
-    </div>
-  </>
-)}
-
+        {agentStatus === "connected" && campaigns.length > 0 && (
+          <>
+            <Label>Escolha a campanha</Label>
+            <div className="flex flex-col gap-2">
+              {campaigns.map((c) => (
+                <Button
+                  key={c.id}
+                  variant="outline"
+                  className="text-black bg-white hover:bg-gray-200"
+                  onClick={() => login(c.id, c.name)}
+                >
+                  {c.name}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
 
         {agentStatus === "logged_in" && (
           <>
@@ -234,7 +258,12 @@ export default function ClickToCallSystem() {
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
               {qualifications.map((q) => (
-                <Button key={q.id} variant="outline">
+                <Button
+                  key={q.id}
+                  variant="outline"
+                  className="text-black bg-white hover:bg-gray-200"
+                  onClick={() => qualifyCall(q.id)}
+                >
                   {q.name}
                 </Button>
               ))}
@@ -245,7 +274,9 @@ export default function ClickToCallSystem() {
 
       <CardFooter className="flex flex-col gap-2">
         {agentStatus === "disconnected" && (
-          <Button onClick={registerExtension} disabled={!agentToken}>Registrar Extensão</Button>
+          <Button onClick={registerExtension} disabled={!agentToken}>
+            Registrar Extensão
+          </Button>
         )}
 
         {agentStatus === "logged_in" && (
