@@ -173,7 +173,7 @@ export default function ClickToCallSystem() {
   }
 
   return (
-    <Card className={clsx("transition-all", agentStatus === "in_call" && "bg-[#008A35] text-white")}> 
+    <Card className="transition-all">
       <CardHeader>
         <CardTitle>3C Plus Click-to-Call</CardTitle>
         <CardDescription>
