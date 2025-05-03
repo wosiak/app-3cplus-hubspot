@@ -22,7 +22,7 @@ export default function ClickToCallSystem() {
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
-
+  
 
   const fetchCampaigns = async () => {
     try {
@@ -75,13 +75,15 @@ export default function ClickToCallSystem() {
         const qualificationUsed = payload?.qualification
         if (qualificationUsed) {
           setQualified({ id: qualificationUsed.id, name: qualificationUsed.name })
-          setQualifications([]) // oculta os botões
+          setQualifications([])
           setStatus({
             message: `Ligação qualificada com sucesso: ${qualificationUsed.name}`,
             type: "success",
           })
         }
       }
+      
+      
       
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
@@ -125,6 +127,7 @@ export default function ClickToCallSystem() {
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
         setQualifications([])
+        setQualified(null)
       }
 
       if (event === "disconnected") {
