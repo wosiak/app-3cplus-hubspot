@@ -17,6 +17,7 @@ export default function ClickToCallSystem() {
   const [selectedCampaign, setSelectedCampaign] = useState<{ id: number; name: string } | null>(null)
   const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "dialing" | "in_call" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
+  const [telephonyId, setTelephonyId] = useState<string | null>(null)
   const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
@@ -39,13 +40,14 @@ export default function ClickToCallSystem() {
 
     try {
       const response = await fetch(
-        `https://app.3c.plus/api/v1/agent/manual_call/${activeCallId}/qualify?api_token=${encodeURIComponent(agentToken)}`,
+        `https://app.3c.plus/api/v1/agent/manual_call/${telephonyId}/qualify?api_token=${encodeURIComponent(agentToken)}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: new URLSearchParams({ qualification_id: String(qualificationId) }),
+          body: new URLSearchParams({ qualification_id: String(qualificationId)
+           }),
         }
       )
 
@@ -85,7 +87,9 @@ export default function ClickToCallSystem() {
       if (event === "call-was-connected") {
         const callId = payload?.call?.id
         const phone = payload?.call?.phone
+        const telephony = payload?.call?.telephony_id
 
+        setTelephonyId(telephony || null)
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
 
