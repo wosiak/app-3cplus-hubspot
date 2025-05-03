@@ -21,6 +21,8 @@ export default function ClickToCallSystem() {
   const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
+  const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
+
 
   const fetchCampaigns = async () => {
     try {
@@ -68,7 +70,19 @@ export default function ClickToCallSystem() {
         setStatus({ message: "Extensão conectada! Pronto para login.", type: "success" })
         fetchCampaigns()
       }
-
+      
+      if (event === "manual-call-was-qualified") {
+        const qualificationUsed = payload?.qualification
+        if (qualificationUsed) {
+          setQualified({ id: qualificationUsed.id, name: qualificationUsed.name })
+          setQualifications([]) // oculta os botões
+          setStatus({
+            message: `Ligação qualificada com sucesso: ${qualificationUsed.name}`,
+            type: "success",
+          })
+        }
+      }
+      
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
         const campaignId = payload?.campaign_id
@@ -257,7 +271,7 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "in_call" && qualifications.length > 0 && (
+        {agentStatus === "in_call" && qualifications.length > 0 && !qualified && (
           <>
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
