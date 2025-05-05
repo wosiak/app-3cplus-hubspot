@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-import { useState, useRef } from "react"
+import { useState } from "react"
 import clsx from "clsx"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,16 +21,9 @@ export default function ClickToCallSystem() {
   const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
-  const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
-  const pendingQualificationsRef = useRef<{ id: number; name: string }[]>([])
-  const [callInProgress, setCallInProgress] = useState(false)
-  const [callAnswered, setCallAnswered] = useState(false)
-  console.log("🧩 agentStatus:", agentStatus)
-  console.log("🧩 qualifications:", qualifications)
-  console.log("🧩 qualified:", qualified)
-  console.log("🛑 call-ended", new Date().toISOString())
-  console.log("✅ manual-call-was-answered", new Date().toISOString())
-
+  const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
+  console.log("🔍 qualified:", qualified)
+  
 
   const fetchCampaigns = async () => {
     try {
@@ -81,21 +74,26 @@ export default function ClickToCallSystem() {
         fetchCampaigns()
       }
       
-      if (event === "manual-call-was-answered") {
-        setTimeout(() => {
-          if (!callInProgress) {
-            console.warn("⚠️ Call já foi encerrada. Ignorando setQualifications.")
-            return
-          }
+      if (event === "manual-call-was-qualified") {
+        console.log("🚨 manual-call-was-qualified payload:", payload)
       
-          setCallAnswered(true) // 💥 Aqui!
-          console.log("📦 Qualificações exibidas com delay:", pendingQualificationsRef.current)
-          setQualifications(pendingQualificationsRef.current)
-        }, 0)
+        const qualificationUsed = payload?.qualification || payload?.call?.qualification
       
-        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
-      }
-                    
+        if (qualificationUsed) {
+          setQualified({ id: qualificationUsed.id, name: qualificationUsed.name })
+          setStatus({
+            message: `Ligação qualificada com sucesso: ${qualificationUsed.name}`,
+            type: "success",
+          })
+        } else {
+          setStatus({
+            message: "Ligação qualificada com sucesso!",
+            type: "success",
+          })
+          // mesmo sem info, ainda escondemos os botões
+          setQualified({ id: -1, name: "Qualificação não identificada" })
+        }
+      }               
       
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
@@ -116,59 +114,31 @@ export default function ClickToCallSystem() {
         const callId = payload?.call?.id
         const phone = payload?.call?.phone
         const telephony = payload?.call?.telephony_id
-      
+
         setTelephonyId(telephony || null)
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
-        setCallInProgress(true)
-      
+
         if (phone) {
           setPhoneNumber(phone)
           setStatus({ message: `Ligação conectada com o número: ${phone}!`, type: "success" })
         } else {
           setStatus({ message: "Ligação conectada!", type: "success" })
         }
-      
-        const qualificationsList =  payload?.call?.campaign?.dialer?.qualification_list?.qualifications || payload?.campaign?.dialer?.qualification_list?.qualifications
 
+        const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
-          pendingQualificationsRef.current = qualificationsList.map((q: any) => ({
-            id: q.id,
-            name: q.name,
-          }))
-          console.log("✅ Qualificações salvas no ref:", pendingQualificationsRef.current)
+          setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
         }
       }
-      
-      if (event === "manual-call-was-answered") {
-        setTimeout(() => {
-          if (!callInProgress) {
-            console.warn("⚠️ Call já foi encerrada. Ignorando setQualifications.")
-            return
-          }
-        
-          console.log("📦 Qualificações exibidas com delay:", pendingQualificationsRef.current)
-          setQualifications(pendingQualificationsRef.current)
-        }, 0)
-        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })        
-      }     
-           
+
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
-        setPhoneNumber("")
-        setCallInProgress(false)
-      
-        // 🧼 Adia o reset para garantir que o manual-call-was-answered finalize antes
-        setTimeout(() => {
-          setQualifications([])
-          setQualified(null)
-          pendingQualificationsRef.current = []
-          setCallAnswered(false) // 💥 IMPORTANTE: garante que botões não reapareçam depois
-          console.log("🧹 Estado de qualificação e ref resetados após delay")
-        }, 1000)
-      }    
+        setQualifications([])
+        setQualified(null)
+      }
 
       if (event === "disconnected") {
         setAgentStatus("disconnected")
@@ -314,7 +284,7 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {callAnswered && qualifications.length > 0 && !qualified && (
+        {agentStatus === "in_call" && qualifications.length > 0 && qualified === null && (
           <div key="qualificacao">
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
@@ -331,6 +301,7 @@ export default function ClickToCallSystem() {
             </div>
           </div>
           )}
+
 
       </CardContent>
 
