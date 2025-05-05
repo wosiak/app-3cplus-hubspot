@@ -23,6 +23,9 @@ export default function ClickToCallSystem() {
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
   const pendingQualificationsRef = useRef<{ id: number; name: string }[]>([])
+  console.log("🧩 agentStatus:", agentStatus)
+  console.log("🧩 qualifications:", qualifications)
+  console.log("🧩 qualified:", qualified)
 
   const fetchCampaigns = async () => {
     try {
@@ -296,7 +299,7 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "in_call" && qualifications.length > 0 && qualified === null && (
+        {agentStatus === "in_call" && qualifications.length > 0 && !qualified && (
           <div key="qualificacao">
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
@@ -313,7 +316,6 @@ export default function ClickToCallSystem() {
             </div>
           </div>
           )}
-
 
       </CardContent>
 
