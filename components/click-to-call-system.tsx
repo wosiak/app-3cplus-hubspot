@@ -140,10 +140,13 @@ export default function ClickToCallSystem() {
       }
       
       if (event === "manual-call-was-answered") {
-        setQualifications(pendingQualificationsRef.current)
+        setTimeout(() => {
+          console.log("📦 Qualificações exibidas com delay:", pendingQualificationsRef.current)
+          setQualifications(pendingQualificationsRef.current)
+        }, 0)
         setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
-        console.log("📦 Qualificações exibidas:", pendingQualificationsRef.current)
-      }     
+      }
+           
       
       if (event === "call-ended") {
         setAgentStatus("finished")
