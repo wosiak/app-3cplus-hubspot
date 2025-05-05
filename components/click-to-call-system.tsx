@@ -136,8 +136,9 @@ export default function ClickToCallSystem() {
       }
       
       if (event === "manual-call-was-answered") {
-        setQualifications(qualificationsRef.current)
         setCallAnswered(true)
+        setQualifications(qualificationsRef.current)
+
         setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
         console.log("📦 Qualificações exibidas:", qualificationsRef.current)
       }
@@ -300,6 +301,12 @@ export default function ClickToCallSystem() {
             <Label>Número do cliente</Label>
             <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
           </>
+        )}
+
+        {callAnswered && (
+          <div style={{ color: "green" }}>
+            DEBUG: callAnswered = true, qual.length = {qualifications.length}
+          </div>
         )}
 
         {agentStatus === "in_call" &&
