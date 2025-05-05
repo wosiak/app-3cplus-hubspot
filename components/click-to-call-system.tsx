@@ -72,17 +72,25 @@ export default function ClickToCallSystem() {
       }
       
       if (event === "manual-call-was-qualified") {
-        const qualificationUsed = payload?.qualification
+        console.log("🚨 manual-call-was-qualified payload:", payload)
+      
+        const qualificationUsed = payload?.qualification || payload?.call?.qualification
+      
         if (qualificationUsed) {
           setQualified({ id: qualificationUsed.id, name: qualificationUsed.name })
           setStatus({
             message: `Ligação qualificada com sucesso: ${qualificationUsed.name}`,
             type: "success",
           })
+        } else {
+          setStatus({
+            message: "Ligação qualificada com sucesso!",
+            type: "success",
+          })
+          // mesmo sem info, ainda escondemos os botões
+          setQualified({ id: -1, name: "Qualificação não identificada" })
         }
-      }
-      
-      
+      }               
       
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
