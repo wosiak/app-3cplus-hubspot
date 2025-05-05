@@ -25,6 +25,10 @@ export default function ClickToCallSystem() {
   const [callAnswered, setCallAnswered] = useState(false)
   const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
   const qualificationsRef = useRef<{ id: number; name: string }[]>([]) // adiciona esse ref aqui
+  useEffect(() => {
+    console.log("🧪 STATE => agentStatus:", agentStatus, "callAnswered:", callAnswered, "qual.len=", qualifications.length)
+  }, [agentStatus, callAnswered, qualifications])
+  
 
   const fetchCampaigns = async () => {
     try {
@@ -136,12 +140,15 @@ export default function ClickToCallSystem() {
       }
       
       if (event === "manual-call-was-answered") {
-        setCallAnswered(true)
-        setQualifications(qualificationsRef.current)
-
-        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
-        console.log("📦 Qualificações exibidas:", qualificationsRef.current)
+        setTimeout(() => {
+          console.log("🧠 call-was-answered chegou! Ref atual:", qualificationsRef.current)
+      
+          setCallAnswered(true)
+          setQualifications(qualificationsRef.current)
+          setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
+        }, 50)
       }
+      
       
       if (event === "call-ended") {
         setAgentStatus("finished")
