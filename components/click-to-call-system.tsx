@@ -23,6 +23,7 @@ export default function ClickToCallSystem() {
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
   const pendingQualificationsRef = useRef<{ id: number; name: string }[]>([])
+  const [callInProgress, setCallInProgress] = useState(false)
   console.log("🧩 agentStatus:", agentStatus)
   console.log("🧩 qualifications:", qualifications)
   console.log("🧩 qualified:", qualified)
@@ -120,6 +121,7 @@ export default function ClickToCallSystem() {
         setTelephonyId(telephony || null)
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
+        setCallInProgress(true)
       
         if (phone) {
           setPhoneNumber(phone)
@@ -141,11 +143,16 @@ export default function ClickToCallSystem() {
       
       if (event === "manual-call-was-answered") {
         setTimeout(() => {
+          if (!callInProgress) {
+            console.warn("⚠️ Call já foi encerrada. Ignorando setQualifications.")
+            return
+          }
+        
           console.log("📦 Qualificações exibidas com delay:", pendingQualificationsRef.current)
           setQualifications(pendingQualificationsRef.current)
         }, 0)
-        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
-      }
+        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })        
+      }     
            
       
       if (event === "call-ended") {
@@ -155,6 +162,7 @@ export default function ClickToCallSystem() {
         setPhoneNumber("")
         setQualifications([])
         setQualified(null)
+        setCallInProgress(false)
         pendingQualificationsRef.current = []
       }
 
