@@ -21,9 +21,7 @@ export default function ClickToCallSystem() {
   const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
-  const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
-  console.log("🔍 qualified:", qualified)
-  
+  const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
 
   const fetchCampaigns = async () => {
     try {
@@ -126,12 +124,21 @@ export default function ClickToCallSystem() {
           setStatus({ message: "Ligação conectada!", type: "success" })
         }
 
+        /*const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
+        if (qualificationsList && Array.isArray(qualificationsList)) {
+          setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
+        }*/
+      }
+
+      if (event === "manual-call-was-answered") {
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
           setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
         }
+      
+        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
       }
-
+      
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
