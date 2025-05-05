@@ -22,6 +22,7 @@ export default function ClickToCallSystem() {
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
+  const [pendingQualifications, setPendingQualifications] = useState<{ id: number; name: string }[]>([])
 
   const fetchCampaigns = async () => {
     try {
@@ -112,32 +113,28 @@ export default function ClickToCallSystem() {
         const callId = payload?.call?.id
         const phone = payload?.call?.phone
         const telephony = payload?.call?.telephony_id
-
+      
         setTelephonyId(telephony || null)
         setActiveCallId(callId || null)
         setAgentStatus("in_call")
-
+      
         if (phone) {
           setPhoneNumber(phone)
           setStatus({ message: `Ligação conectada com o número: ${phone}!`, type: "success" })
         } else {
           setStatus({ message: "Ligação conectada!", type: "success" })
         }
-
-        /*const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
-        if (qualificationsList && Array.isArray(qualificationsList)) {
-          setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
-        }*/
-      }
-
-      if (event === "manual-call-was-answered") {
+      
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
-          setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
+          setPendingQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
         }
-      
-        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
       }
+      
+      if (event === "manual-call-was-answered") {
+        setQualifications(pendingQualifications)
+        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
+      }      
       
       if (event === "call-ended") {
         setAgentStatus("finished")
