@@ -22,7 +22,7 @@ export default function ClickToCallSystem() {
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
-  const [pendingQualifications, setPendingQualifications] = useState<{ id: number; name: string }[]>([])
+  const pendingQualificationsRef = useRef<{ id: number; name: string }[]>([])
 
   const fetchCampaigns = async () => {
     try {
@@ -127,12 +127,15 @@ export default function ClickToCallSystem() {
       
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
-          setPendingQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
+          pendingQualificationsRef.current = qualificationsList.map((q: any) => ({
+            id: q.id,
+            name: q.name,
+          }))          
         }
       }
       
       if (event === "manual-call-was-answered") {
-        setQualifications(pendingQualifications)
+        setQualifications(pendingQualificationsRef.current)
         setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
       }      
       
@@ -142,6 +145,7 @@ export default function ClickToCallSystem() {
         setActiveCallId(null)
         setQualifications([])
         setQualified(null)
+        pendingQualificationsRef.current = []
       }
 
       if (event === "disconnected") {
