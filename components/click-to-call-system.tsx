@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallSocket } from "@/hooks/useCallSocket"
-import { useState } from "react"
+import { useState, useRef} from "react"
 import clsx from "clsx"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
