@@ -140,15 +140,13 @@ export default function ClickToCallSystem() {
       }
       
       if (event === "manual-call-was-answered") {
-        setTimeout(() => {
-          console.log("🧠 call-was-answered chegou! Ref atual:", qualificationsRef.current)
+        console.log("💬 call-was-answered chegou! Ref atual:", qualificationsRef.current)
       
-          setCallAnswered(true)
-          setQualifications(qualificationsRef.current)
-          setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
-        }, 50)
+        setQualifications(qualificationsRef.current)
+        setCallAnswered(true)
+        console.log("⚡️ Estado após answered => callAnswered:", true, "qual.len=", qualificationsRef.current.length)
+        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
       }
-      
       
       if (event === "call-ended") {
         setAgentStatus("finished")
