@@ -125,24 +125,28 @@ export default function ClickToCallSystem() {
           setStatus({ message: "Ligação conectada!", type: "success" })
         }
       
-        const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
+        const qualificationsList =  payload?.call?.campaign?.dialer?.qualification_list?.qualifications || payload?.campaign?.dialer?.qualification_list?.qualifications
+
         if (qualificationsList && Array.isArray(qualificationsList)) {
           pendingQualificationsRef.current = qualificationsList.map((q: any) => ({
             id: q.id,
             name: q.name,
-          }))          
+          }))
+          console.log("✅ Qualificações salvas no ref:", pendingQualificationsRef.current)
         }
       }
       
       if (event === "manual-call-was-answered") {
         setQualifications(pendingQualificationsRef.current)
         setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
-      }      
+        console.log("📦 Qualificações exibidas:", pendingQualificationsRef.current)
+      }     
       
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
+        setPhoneNumber("")
         setQualifications([])
         setQualified(null)
         pendingQualificationsRef.current = []
