@@ -55,6 +55,8 @@ export default function ClickToCallSystem() {
       )
 
       if (!response.ok) throw new Error("Erro ao qualificar chamada.")
+      
+      setQualified({ id: qualificationId, name: qualifications.find(q => q.id === qualificationId)?.name || "Qualificado" })
       setStatus({ message: "Ligação qualificada com sucesso!", type: "success" })
     } catch (err) {
       setStatus({ message: "Erro ao qualificar chamada.", type: "error" })
