@@ -19,13 +19,12 @@ export default function ClickToCallSystem() {
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
   const [telephonyId, setTelephonyId] = useState<string | null>(null)
   const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
+  const qualificationsRef = useRef<{ id: number; name: string }[]>([])
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
   console.log("🔍 qualified:", qualified)
   const [callAnswered, setCallAnswered] = useState(false)
-
-  
 
   const fetchCampaigns = async () => {
     try {
@@ -130,22 +129,34 @@ export default function ClickToCallSystem() {
 
         const qualificationsList = payload?.campaign?.dialer?.qualification_list?.qualifications
         if (qualificationsList && Array.isArray(qualificationsList)) {
-          setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
+          qualificationsRef.current = qualificationsList.map((q: any) => ({ id: q.id, name: q.name }))
+          console.log("🎯 Qualificações armazenadas (ref):", qualificationsRef.current)
         }
+
       }
       
       if (event === "manual-call-was-answered") {
+        setQualifications(qualificationsRef.current)
         setCallAnswered(true)
         setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
+        console.log("📦 Qualificações exibidas:", qualificationsRef.current)
       }
+      
 
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
-        setQualifications([])
         setQualified(null)
+      
+        // Adia reset para evitar conflito com answered
+        setTimeout(() => {
+          setQualifications([])
+          qualificationsRef.current = []
+          console.log("🧹 Qualificações e ref resetados após call-ended")
+        }, 500)
       }
+      
 
       if (event === "disconnected") {
         setAgentStatus("disconnected")
@@ -291,7 +302,10 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "in_call" && callAnswered && qualifications.length > 0 && !qualified && (
+        {agentStatus === "in_call" &&
+          callAnswered &&
+          qualifications.length > 0 &&
+          qualified === null && (
           <div key="qualificacao">
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
