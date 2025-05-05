@@ -17,14 +17,14 @@ export default function ClickToCallSystem() {
   const [selectedCampaign, setSelectedCampaign] = useState<{ id: number; name: string } | null>(null)
   const [agentStatus, setAgentStatus] = useState<"disconnected" | "extension_opened" | "connected" | "logged_in" | "dialing" | "in_call" | "finished">("disconnected")
   const [activeCallId, setActiveCallId] = useState<string | null>(null)
-  const [telephonyId, setTelephonyId] = useState<string | null>(null)
-  const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
-  const qualificationsRef = useRef<{ id: number; name: string }[]>([])
+  const [telephonyId, setTelephonyId] = useState<string | null>(null)    
   const [status, setStatus] = useState<{ message: string; type: "success" | "error" | "info" | null }>({ message: "", type: null })
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
   console.log("🔍 qualified:", qualified)
   const [callAnswered, setCallAnswered] = useState(false)
+  const [qualifications, setQualifications] = useState<{ id: number; name: string }[]>([])
+  const qualificationsRef = useRef<{ id: number; name: string }[]>([]) // adiciona esse ref aqui
 
   const fetchCampaigns = async () => {
     try {
@@ -143,7 +143,6 @@ export default function ClickToCallSystem() {
         console.log("📦 Qualificações exibidas:", qualificationsRef.current)
       }
       
-
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
@@ -154,10 +153,10 @@ export default function ClickToCallSystem() {
         setTimeout(() => {
           setQualifications([])
           qualificationsRef.current = []
-          console.log("🧹 Qualificações e ref resetados após call-ended")
+          setCallAnswered(false) // 💥 Aqui está o pulo do gato!
+          console.log("🧹 Qualificações, ref e callAnswered resetados após call-ended")
         }, 500)
-      }
-      
+      } 
 
       if (event === "disconnected") {
         setAgentStatus("disconnected")
