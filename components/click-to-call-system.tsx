@@ -75,7 +75,6 @@ export default function ClickToCallSystem() {
         const qualificationUsed = payload?.qualification
         if (qualificationUsed) {
           setQualified({ id: qualificationUsed.id, name: qualificationUsed.name })
-          setQualifications([])
           setStatus({
             message: `Ligação qualificada com sucesso: ${qualificationUsed.name}`,
             type: "success",
