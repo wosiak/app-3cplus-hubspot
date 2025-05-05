@@ -281,7 +281,7 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "in_call" && qualifications.length > 0 && !qualified && (
+        {agentStatus === "in_call" && qualifications.length > 0 && qualified === null && (
           <>
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
