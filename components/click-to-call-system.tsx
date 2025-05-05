@@ -23,6 +23,8 @@ export default function ClickToCallSystem() {
   const [isLoading, setIsLoading] = useState(false)
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)
   console.log("🔍 qualified:", qualified)
+  const [callAnswered, setCallAnswered] = useState(false)
+
   
 
   const fetchCampaigns = async () => {
@@ -130,6 +132,11 @@ export default function ClickToCallSystem() {
         if (qualificationsList && Array.isArray(qualificationsList)) {
           setQualifications(qualificationsList.map((q: any) => ({ id: q.id, name: q.name })))
         }
+      }
+      
+      if (event === "manual-call-was-answered") {
+        setCallAnswered(true)
+        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
       }
 
       if (event === "call-ended") {
@@ -284,7 +291,7 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "in_call" && qualifications.length > 0 && qualified === null && (
+        {callAnswered && qualifications.length > 0 && qualified === null && (
           <div key="qualificacao">
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
