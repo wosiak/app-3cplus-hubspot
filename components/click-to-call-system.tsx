@@ -301,7 +301,10 @@ export default function ClickToCallSystem() {
             <Input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
           </>
         )}
-
+        <div style={{ color: 'orange', fontSize: '12px' }}>
+          DEBUG: agentStatus={agentStatus}, callAnswered={String(callAnswered)}, qual.len={qualifications.length}, qualified={JSON.stringify(qualified)}
+        </div>
+        
         {callAnswered && (
           <div style={{ color: "green" }}>
             DEBUG: callAnswered = true, qual.length = {qualifications.length}
@@ -311,7 +314,7 @@ export default function ClickToCallSystem() {
         {agentStatus === "in_call" &&
           callAnswered &&
           qualifications.length > 0 &&
-          qualified === null && (
+          !qualified && (
           <div key="qualificacao">
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
