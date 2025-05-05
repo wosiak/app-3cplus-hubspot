@@ -27,6 +27,9 @@ export default function ClickToCallSystem() {
   console.log("🧩 agentStatus:", agentStatus)
   console.log("🧩 qualifications:", qualifications)
   console.log("🧩 qualified:", qualified)
+  console.log("🛑 call-ended", new Date().toISOString())
+  console.log("✅ manual-call-was-answered", new Date().toISOString())
+
 
   const fetchCampaigns = async () => {
     try {
@@ -154,17 +157,23 @@ export default function ClickToCallSystem() {
         setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })        
       }     
            
-      
       if (event === "call-ended") {
         setAgentStatus("finished")
         setStatus({ message: `Ligação finalizada com ${phoneNumber}.`, type: "info" })
         setActiveCallId(null)
         setPhoneNumber("")
-        setQualifications([])
-        setQualified(null)
         setCallInProgress(false)
-        pendingQualificationsRef.current = []
+      
+        // 🧼 Adia o reset para permitir que manual-call-was-answered finalize
+        setTimeout(() => {
+          setQualifications([])
+          setQualified(null)
+          pendingQualificationsRef.current = []
+          console.log("🧹 Estado de qualificação e ref resetados após delay")
+        }, 1000)
       }
+      
+      
 
       if (event === "disconnected") {
         setAgentStatus("disconnected")
