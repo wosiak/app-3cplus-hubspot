@@ -24,6 +24,7 @@ export default function ClickToCallSystem() {
   const [qualified, setQualified] = useState<{ id: number; name: string } | null>(null)  
   const pendingQualificationsRef = useRef<{ id: number; name: string }[]>([])
   const [callInProgress, setCallInProgress] = useState(false)
+  const [callAnswered, setCallAnswered] = useState(false)
   console.log("🧩 agentStatus:", agentStatus)
   console.log("🧩 qualifications:", qualifications)
   console.log("🧩 qualified:", qualified)
@@ -80,26 +81,21 @@ export default function ClickToCallSystem() {
         fetchCampaigns()
       }
       
-      if (event === "manual-call-was-qualified") {
-        console.log("🚨 manual-call-was-qualified payload:", payload)
+      if (event === "manual-call-was-answered") {
+        setTimeout(() => {
+          if (!callInProgress) {
+            console.warn("⚠️ Call já foi encerrada. Ignorando setQualifications.")
+            return
+          }
       
-        const qualificationUsed = payload?.qualification || payload?.call?.qualification
+          setCallAnswered(true) // 💥 Aqui!
+          console.log("📦 Qualificações exibidas com delay:", pendingQualificationsRef.current)
+          setQualifications(pendingQualificationsRef.current)
+        }, 0)
       
-        if (qualificationUsed) {
-          setQualified({ id: qualificationUsed.id, name: qualificationUsed.name })
-          setStatus({
-            message: `Ligação qualificada com sucesso: ${qualificationUsed.name}`,
-            type: "success",
-          })
-        } else {
-          setStatus({
-            message: "Ligação qualificada com sucesso!",
-            type: "success",
-          })
-          // mesmo sem info, ainda escondemos os botões
-          setQualified({ id: -1, name: "Qualificação não identificada" })
-        }
-      }               
+        setStatus({ message: "Ligação atendida! Pode qualificar quando quiser.", type: "info" })
+      }
+                    
       
       if (event === "agent-entered-manual") {
         setAgentStatus("logged_in")
@@ -164,16 +160,15 @@ export default function ClickToCallSystem() {
         setPhoneNumber("")
         setCallInProgress(false)
       
-        // 🧼 Adia o reset para permitir que manual-call-was-answered finalize
+        // 🧼 Adia o reset para garantir que o manual-call-was-answered finalize antes
         setTimeout(() => {
           setQualifications([])
           setQualified(null)
           pendingQualificationsRef.current = []
+          setCallAnswered(false) // 💥 IMPORTANTE: garante que botões não reapareçam depois
           console.log("🧹 Estado de qualificação e ref resetados após delay")
         }, 1000)
-      }
-      
-      
+      }    
 
       if (event === "disconnected") {
         setAgentStatus("disconnected")
@@ -319,7 +314,7 @@ export default function ClickToCallSystem() {
           </>
         )}
 
-        {agentStatus === "in_call" && qualifications.length > 0 && !qualified && (
+        {callAnswered && qualifications.length > 0 && !qualified && (
           <div key="qualificacao">
             <Label>Qualifique a ligação:</Label>
             <div className="flex flex-wrap gap-2">
